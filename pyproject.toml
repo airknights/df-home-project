@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "df-home-project"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.50.0",
+]
+
+[project.scripts]
+df-home = "df_home.main:main"
