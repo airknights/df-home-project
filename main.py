@@ -5,7 +5,7 @@ import sys
 import sqlite3
 import anthropic
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def query_db(sql: str, **kwargs) -> None:
             print(f"OK ({cur.rowcount} rows affected)")
         con.close()
     except sqlite3.Error as e:
-        print(f"DB error: {e}")
+        log.error("DB error: %s", e)
 
 
 SQL_KEYWORDS = {"select", "insert", "update", "delete", "create", "drop", "alter", "pragma"}
@@ -88,7 +88,7 @@ def handle_db_request(user_input: str, selected_department: str) -> None:
         query_db(user_input, selected_department=selected_department)
     else:
         sql = natural_language_to_sql(user_input, selected_department=selected_department)
-        print(f"SQL: {sql}")
+        log.info("SQL: %s", sql)
         query_db(sql)
 
 
@@ -104,16 +104,16 @@ def main():
 
         department_selected = data_rows[random_dept_index][0]
 
-        print("Selected department:", department_selected)
+        log.info(f"Selected department: {department_selected}")
 
         while True:
             line = input("You: ").strip()
             if not line:
                 continue
-            if line.lower().startswith("db:"):
-                handle_db_request(line[3:].strip(), selected_department=department_selected)
-            else:
+            if line.lower().startswith("ask_llm:"):
                 ask_claude(line)
+            else:
+                handle_db_request(line[3:].strip(), selected_department=department_selected)
     except (EOFError, KeyboardInterrupt):
         pass
 
