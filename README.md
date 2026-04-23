@@ -1,13 +1,15 @@
-# df-home-project CLI
+# df-home-project
 
-A CLI tool that chats with Claude AI and queries an SQLite employees database using natural language.
+A CLI tool that chats with Claude AI and queries an SQLite employees database using natural language or raw SQL. Logs are formatted as `[INFO]: {message}`.
 
 ## Setup
 
-**Install dependencies:**
+**Install the package:**
 ```bash
-pip install anthropic
+pip install -e .
 ```
+
+This installs all dependencies (including `anthropic`) and registers the `df-home` CLI command.
 
 **Set your API key:**
 ```bash
@@ -20,54 +22,50 @@ $env:ANTHROPIC_API_KEY = "your-key-here"
 
 ## Usage
 
-### Chat with Claude
-
-Pass a question as an argument:
+Run the interactive CLI:
 ```bash
-python main.py "What is the capital of France?"
+df-home
 ```
 
-Or run interactively:
-```bash
-python main.py
-You: Explain what a binary tree is
-You: What are some sorting algorithms?
+On startup, the app connects to `employees.db`, picks a random department as a guardrail, and enters an interactive prompt.
+
+### Chat with Claude
+
+Prefix your input with `ask_llm:`:
+```
+You: ask_llm: What is a relational database?
+[INFO]: Claude: A relational database is...
 ```
 
 ### Query the Database
 
-The database file is `employees.db` in the project directory.
+All other input is treated as a database query. The app auto-detects whether it's SQL or natural language.
 
-#### Natural language (translated to SQL by Claude)
-```bash
-# Via flag
-python main.py --db "show me all employees with a salary above 50000"
-python main.py --db "who are the top 5 highest paid employees"
-python main.py --db "how many employees are in each department"
-
-# Interactive — prefix with "db:"
-You: db: show me all employees
-You: db: who earns the most
+#### Natural language → SQL (translated by Claude)
+```
+You: show me all employees with a salary above 50000
+[INFO]: SQL: SELECT * FROM employee WHERE salary > 50000 AND department = 'Engineering'
+[INFO]: name | salary | department
+[INFO]: --------------------------------
+[INFO]: Alice | 90000 | Engineering
 ```
 
 #### Raw SQL (runs directly)
-```bash
-# Via flag
-python main.py --db "SELECT * FROM employees"
-python main.py --db "INSERT INTO employees (name, role, salary) VALUES ('Alice', 'Engineer', 90000)"
-
-# Interactive
-You: db: SELECT name, salary FROM employees ORDER BY salary DESC
-You: db: CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, role TEXT, salary REAL)
+SQL keywords (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, `ALTER`, `PRAGMA`) trigger direct execution:
+```
+You: SELECT name, salary FROM employee ORDER BY salary DESC
+[INFO]: name | salary
+[INFO]: ----------
+[INFO]: Alice | 120000
 ```
 
-The `db:` interface auto-detects whether input is SQL or natural language — SQL keywords (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, `ALTER`, `PRAGMA`) trigger direct execution; everything else is translated by Claude first.
+## Project Structure
 
-When natural language is used, the generated SQL is printed before results:
 ```
-SQL: SELECT name, salary FROM employees ORDER BY salary DESC LIMIT 5
-name  | salary
-------------
-Alice | 120000
-...
+df-home-project/
+  pyproject.toml      # package config and dependencies
+  employees.db        # SQLite database
+  df_home/
+    __init__.py
+    main.py           # CLI entrypoint
 ```

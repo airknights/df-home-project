@@ -10,5 +10,8 @@ dependencies = [
     "anthropic>=0.50.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["df_home"]
+
 [project.scripts]
 df-home = "df_home.main:main"
