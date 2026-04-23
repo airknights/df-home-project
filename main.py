@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
+import logging
+import random
 import sys
 import sqlite3
 import anthropic
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+log = logging.getLogger(__name__)
 
 DB_PATH = "employees.db"
 
@@ -33,7 +39,7 @@ def get_schema() -> str:
         return f"Could not read schema: {e}"
 
 
-def natural_language_to_sql(user_input: str) -> str:
+def natural_language_to_sql(user_input: str, selected_department) -> str:
     schema = get_schema()
     client = anthropic.Anthropic()
     response = client.messages.create(
@@ -41,6 +47,7 @@ def natural_language_to_sql(user_input: str) -> str:
         max_tokens=512,
         system=(
             "You are a SQL expert. Convert the user's natural language request into a single valid SQLite query. "
+            f"queries must include selected department to be {selected_department}"
             "Respond with ONLY the raw SQL — no markdown, no explanation, no code fences."
         ),
         messages=[
@@ -50,11 +57,14 @@ def natural_language_to_sql(user_input: str) -> str:
     return response.content[0].text.strip()
 
 
-def query_db(sql: str) -> None:
+def query_db(sql: str, **kwargs) -> None:
     try:
         con = sqlite3.connect(DB_PATH)
         cur = con.execute(sql)
         rows = cur.fetchall()
+        if kwargs.get("return_data"):
+            return rows
+
         if cur.description:
             headers = [col[0] for col in cur.description]
             print(" | ".join(headers))
@@ -72,39 +82,40 @@ def query_db(sql: str) -> None:
 SQL_KEYWORDS = {"select", "insert", "update", "delete", "create", "drop", "alter", "pragma"}
 
 
-def handle_db_request(user_input: str) -> None:
+def handle_db_request(user_input: str, selected_department: str) -> None:
     first_word = user_input.strip().split()[0].lower() if user_input.strip() else ""
     if first_word in SQL_KEYWORDS:
-        query_db(user_input)
+        query_db(user_input, selected_department=selected_department)
     else:
-        sql = natural_language_to_sql(user_input)
+        sql = natural_language_to_sql(user_input, selected_department=selected_department)
         print(f"SQL: {sql}")
         query_db(sql)
 
 
 def main():
-    args = sys.argv[1:]
+    try:
+        # guardrail: query db to get department and then set one at random
+        data_rows = query_db("select distinct department from employee", return_data=True)
+        data_rows_num_items = len(data_rows)
+        if data_rows_num_items > 0:
+            random_dept_index = random.randrange(1, data_rows_num_items)
+        else:
+            exit("No departments found. Exiting")
 
-    if args and args[0] == "--db":
-        user_input = " ".join(args[1:])
-        if not user_input:
-            print("Usage: main.py --db <natural language request>")
-            sys.exit(1)
-        handle_db_request(user_input)
-    elif args:
-        ask_claude(" ".join(args))
-    else:
-        try:
-            while True:
-                line = input("You: ").strip()
-                if not line:
-                    continue
-                if line.lower().startswith("db:"):
-                    handle_db_request(line[3:].strip())
-                else:
-                    ask_claude(line)
-        except (EOFError, KeyboardInterrupt):
-            pass
+        department_selected = data_rows[random_dept_index][0]
+
+        print("Selected department:", department_selected)
+
+        while True:
+            line = input("You: ").strip()
+            if not line:
+                continue
+            if line.lower().startswith("db:"):
+                handle_db_request(line[3:].strip(), selected_department=department_selected)
+            else:
+                ask_claude(line)
+    except (EOFError, KeyboardInterrupt):
+        pass
 
 
 if __name__ == "__main__":
