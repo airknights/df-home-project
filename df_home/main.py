@@ -14,14 +14,11 @@ log = logging.getLogger(__name__)
 def main():
     try:
         # guardrail: query db to get department and then set one at random
-        data_rows = query_db("select distinct department from employee", return_data=True)
-        data_rows_num_items = len(data_rows)
-        if data_rows_num_items > 0:
-            random_dept_index = random.randrange(1, data_rows_num_items)
+        data_rows = query_db("SELECT distinct department FROM employee ORDER BY RANDOM() LIMIT 1;", return_data=True)
+        if data_rows:
+            department_selected = data_rows[0][0]
         else:
             exit("No departments found. Exiting")
-
-        department_selected = data_rows[random_dept_index][0]
 
         log.info(f"Selected department: {department_selected}")
 
