@@ -4,7 +4,7 @@ import random
 import sys
 
 from df_home.llm_utils import ask_llm
-from df_home.db_requests import query_db, handle_db_request
+from df_home.db_utils import query_db, handle_db_request
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="[%(levelname)s]: %(message)s")
 
