@@ -102,3 +102,24 @@ scaffolding it manually mainly because it would require me to look up multiple d
 3X the amount of time to generate ultimately the same code.
 
 I did also ask it to do some autocomplete stuff (built into pycharm via AI).
+
+
+## Weaknesses
+
+It's not capable of handling all kinds of natural language.  Which will need additional training and/or guadrails or detailed queries.
+
+example: Marketing department, I wanted to get the brand managers, so I asked:
+
+"show me all the brand folks"
+
+For which the query generated is 
+```sql
+ SELECT * FROM Employee WHERE Department = 'Marketing'
+```
+
+However, when I said: "give me everyone with a brand in the title"
+
+it generated:
+SELECT * FROM Employee WHERE Department = 'Marketing' AND Role LIKE '%Brand%'
+
+
