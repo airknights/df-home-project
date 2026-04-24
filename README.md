@@ -104,7 +104,7 @@ scaffolding it manually mainly because it would require me to look up multiple d
 I did also ask it to do some autocomplete stuff (built into pycharm via AI).
 
 
-## Weaknesses
+## Limitations from LLM on translating NL2SQL
 
 It's not capable of handling all kinds of natural language.  Which will need additional training and/or guadrails or detailed queries.
 
