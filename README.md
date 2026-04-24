@@ -69,3 +69,36 @@ df-home-project/
     __init__.py
     main.py           # CLI entrypoint
 ```
+
+## Architecture decisions
+
+Almost all default pathways is as follows
+
+1. startup 
+2. department randomly selected and logged 
+3. input sent to llm 
+4. query generated with guardrails 
+5. query ran 
+6. results returned
+
+Optional pathway includes prefix with ask_llm: where ended questions to llm is possible.  This is mostly for debug testing.
+
+1. startup 
+2. department randomly selected and logged 
+3. input sent to llm 
+4. answer from llm printed
+
+Optional Direct query pathway: this is to determine the data sets and any time I want to query db for whatever reason.
+1. startup 
+2. department randomly selected and logged  
+5. query ran 
+6. results returned
+
+
+## Notice on AI usage
+
+I did use claude code to generate the general structure and scaffolding code.  I didn't want to waste time with 
+scaffolding it manually mainly because it would require me to look up multiple document sources and spend almost
+3X the amount of time to generate ultimately the same code.
+
+I did also ask it to do some autocomplete stuff (built into pycharm via AI).
